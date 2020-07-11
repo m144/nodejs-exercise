@@ -12,7 +12,7 @@ const db = new Database({
 
 exports.all = function(req, res) {
 	db.query("SELECT id, name, email FROM users;").then(rows => {
-		return res.json(rows);
+		res.json(rows);
 	});
 }
 
@@ -30,14 +30,13 @@ exports.create = function(req, res) {
 		},
 		err => {
 			res.status(500).send('DB Error');
-			throw err;
 		}
 	)
 	.then(quit => {
 		if (quit) return;
 
 		return bcrypt.hash(request.password, saltRounds, async (err, hash) => {
-			if (err) throw err;
+			if (err) res.status(500).send('Hashing error');
 
 			return await db
 			.query("INSERT INTO users (name, email, password) VALUES (?,?,?);", [request.name, request.email, hash])
@@ -54,12 +53,12 @@ exports.create = function(req, res) {
 				}
 			)
 			.catch(err => {
-				db.close().then( () => { throw err; } );
+				db.close().then( () => { res.status(500).send(err); } );
 			});
 		});
 	})
 	.catch(err => {
-		db.close().then( () => { throw err; } );
+		db.close().then( () => { res.status(500).send(err); } );
 	});
 }
 
@@ -68,8 +67,9 @@ exports.delete = function(req, res) {
 		db.query("DELETE FROM users WHERE id=?",[req.params.userId])
 		.then(
 			() => res.status(204).end(),
-			err => db.close().then( () => { throw 'Unable to delete new user: ' + err.sqlMessage; } )
-		);
+			err => db.close().then( () => { res.status(500).send('Unable to delete new user: ' + err.sqlMessage); } )
+		)
+		.catch(err => db.close().then( () => { res.status(500).send('Unable to delete new user: ' + err.sqlMessage); } ));
 	} else {
 		return res.status(422).send('Wrong data received');
 	}
