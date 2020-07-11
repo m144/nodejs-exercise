@@ -1,19 +1,23 @@
 const { body, validationResult } = require('express-validator')
 const userValidationRules = () => {
-	console.log('validating rules');
 	return [
-		body('name', 'name not specified').exists().not().isEmpty(),
-		body('email', 'Invalid email').exists().isEmail().normalizeEmail(),
-		body('password', 'password not specified').exists().not().isEmpty()
+		body('name')
+			.exists().withMessage('no name given')
+			.not().isEmpty().withMessage('empty name'),
+		body('email')
+			.exists().withMessage('no email given')
+			.not().isEmpty().withMessage('empty email')
+			.isEmail().withMessage('invalid email')
+			.normalizeEmail(),
+		body('password')
+			.exists().withMessage('no password given')
+			.not().isEmpty().withMessage('empty password')
 	];
 };
 
 const validate = (req, res, next) => {
-	console.log('validate called');
 	const errors = validationResult(req);
-	console.log(errors);
 	if (errors.isEmpty()) {
-		console.log('no errors');
 		return next();
 	}
 	const extractedErrors = [];

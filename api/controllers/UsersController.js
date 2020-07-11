@@ -44,8 +44,6 @@ exports.all = function(req, res) {
 }
 
 exports.create = function(req, res) {
-	console.log('inside create function');
-	console.log(req.body);
 	db
 	.query("SELECT id FROM users WHERE email = ?",[req.body.email])
 	.then(
@@ -61,7 +59,7 @@ exports.create = function(req, res) {
 	.then(() => {
 		bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
 			if (err) res.status(500).send(err);
-	
+
 			db
 			.query("INSERT INTO users (name, email, password) VALUES (?,?,?);", [req.body.name, req.body.email, hash])
 			.then(

@@ -6,8 +6,5 @@ module.exports = function(app) {
   // user Routes
   app.get('/users', users.all);
   app.post('/users', userValidationRules(), validate, users.create);
-
-
-  app.route('/users/:userId')
-    .delete(users.delete);
+  app.delete('/users/:userId', users.delete);
 };
