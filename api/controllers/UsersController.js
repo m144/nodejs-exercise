@@ -1,86 +1,65 @@
 'use strict';
-const mysql = require('mysql');
-const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
+const Database = require('../../database');
 const saltRounds = 10;
 
-class Database {
-	constructor(config) {
-		this.con = mysql.createConnection(config);
-	}
-	query(sql, args) {
-		return new Promise((resolve, reject) => {
-			this.con.query(sql, args, (err, rows) => {
-				if (err) {
-					return reject(err);
-				}
-				resolve(rows);
-			});
-		});
-	}
-	close() {
-		return new Promise((resolve, reject) => {
-			this.con.end(err => {
-				if (err) {
-					return reject(err);
-				}
-				resolve();
-			});
-		});
-	}
-}
-
 const db = new Database({
-  host: 'localhost',
-  user: 'root',
-  password: '12345678',
-  database: 'lytx'
+	host: process.env.MYSQL_DB_HOST,
+	user: process.env.MYSQL_DB_USER,
+	password: process.env.MYSQL_DB_PASS,
+	database: process.env.MYSQL_DB_NAME
 });
 
 exports.all = function(req, res) {
 	db.query("SELECT id, name, email FROM users;").then(rows => {
-		res.json(rows);
+		return res.json(rows);
 	});
 }
 
 exports.create = function(req, res) {
+	var request = Object.assign({},req.body);
 	db
-	.query("SELECT id FROM users WHERE email = ?",[req.body.email])
+	.query("SELECT id FROM users WHERE email = ?",[request.email])
 	.then(
 		rows => {
 			if (rows && rows.length) {
 				res.status(422).send('User already exists');
+				return true;
 			}
+			return false;
 		},
 		err => {
 			res.status(500).send('DB Error');
+			throw err;
 		}
 	)
-	.then(() => {
-		bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
-			if (err) res.status(500).send(err);
+	.then(quit => {
+		if (quit) return;
 
-			db
-			.query("INSERT INTO users (name, email, password) VALUES (?,?,?);", [req.body.name, req.body.email, hash])
+		return bcrypt.hash(request.password, saltRounds, async (err, hash) => {
+			if (err) throw err;
+
+			return await db
+			.query("INSERT INTO users (name, email, password) VALUES (?,?,?);", [request.name, request.email, hash])
 			.then(
 				result => {
 					return db.query("SELECT id, name, email FROM users WHERE id=?",[result.insertId]);
 				},
-				err => db.close().then( () => { res.status(500).send('Unable to add new user: ' + err.sqlMessage); } )
+				err => db.close().then( () => { throw 'Unable to add new user: ' + err.sqlMessage; } )
 			)
 			.then(
 				rows => {
 					var result = rows[0];
-					res.status(201).json(result);
+					return res.status(201).json(result);
 				}
 			)
 			.catch(err => {
-				db.close().then( () => { res.status(500).send(err); } );
+				db.close().then( () => { throw err; } );
 			});
 		});
 	})
 	.catch(err => {
-		db.close().then( () => { res.status(500).send(err); } );
+		db.close().then( () => { throw err; } );
 	});
 }
 
@@ -89,9 +68,9 @@ exports.delete = function(req, res) {
 		db.query("DELETE FROM users WHERE id=?",[req.params.userId])
 		.then(
 			() => res.status(204).end(),
-			err => res.status(500).send(err.sqlMessage)
+			err => db.close().then( () => { throw 'Unable to delete new user: ' + err.sqlMessage; } )
 		);
 	} else {
-		res.status(422).send('Wrong data received');
+		return res.status(422).send('Wrong data received');
 	}
 }

@@ -2,10 +2,24 @@
 const app = require('../server'),
     chai = require('chai'), chaiHttp = require('chai-http'),
     expect = chai.expect //to solve error when using done(): “ReferenceError: expect is not defined”
-    ;
+	;
+
+const Database = require('../database');
+
+const db = new Database({
+	host: process.env.MYSQL_DB_HOST,
+	user: process.env.MYSQL_DB_USER,
+	password: process.env.MYSQL_DB_PASS,
+	database: process.env.MYSQL_DB_NAME
+});
+
 chai.use(chaiHttp);
 //chai.use(chaiSubset);
 describe('Testing User REST API', function () {
+	before('starting delete test entities',() => {
+		console.log('deleting test entities');
+		return db.query("DELETE FROM users WHERE name LIKE 'test_entity%';").then(() => {}, err => {throw err;});
+	});
     after(() => {});
     var url = 'http://localhost:3000';
     var requester = chai.request.agent(url);//to keep the same session; without requester agent the get or post will act as opening a new window
@@ -14,12 +28,12 @@ describe('Testing User REST API', function () {
 	// done also accepts an error parameter when signaling completion.
     const users = {
 		correct_user: {
-			name:'Tester Testerov',
+			name:'test_entity1',
 			email:'not@home.com',
 			password:'password123'
 		},
 		correct_user_2: {
-			name:'Chuck Testa',
+			name:'test_entity2',
 			email:'chuck.not@home.com',
 			password:'passchuck123'
 		},
@@ -33,15 +47,15 @@ describe('Testing User REST API', function () {
 			password:'password123'
 		},
 		missing_password_user: {
-			name:'Tester Testerov',
+			name:'test_entity3',
 			email:'not@home.com'
 		},
 		missing_email_user: {
-			name:'Tester Testerov',
+			name:'test_entity4',
 			password:'password123'
 		},
 		wrong_email_format_user: {
-			name:'Tester Testerov',
+			name:'test_entity5',
 			email:'not@home',
 			password:'password123'
 		}
@@ -49,7 +63,8 @@ describe('Testing User REST API', function () {
 	var user_id = null;
 	var user_id_2 = null;
     it('should add a new user to the users table successfully', function (done) { // <= Pass in done callback
-        requester
+		console.log('should add a new user to the users table successfully');
+		requester
             .post('/users')
             .send(users.correct_user)
             .then(res => {
@@ -68,7 +83,8 @@ describe('Testing User REST API', function () {
 			});
 	});
 	it('should fail adding the same user to the users table', function (done) { // <= Pass in done callback
-        requester
+		console.log('should fail adding the same user to the users table');
+		requester
             .post('/users')
             .send(users.correct_user)
             .then(res => {
@@ -84,7 +100,8 @@ describe('Testing User REST API', function () {
 			});
 	});
 	it('should add another new user to the users table successfully', function (done) { // <= Pass in done callback
-        requester
+		console.log('started should add another new user to the users table successfully');
+		requester
             .post('/users')
             .send(users.correct_user_2)
             .then(res => {
@@ -139,8 +156,8 @@ describe('Testing User REST API', function () {
 				var response = JSON.parse(res.text);
 				expect(response).not.to.include.deep.members([{
 					id:user_id,
-					name:user.name,
-					email:user.email
+					name:users.correct_user.name,
+					email:users.correct_user.email
 				}]);
                 done(); // <= Call done to signal callback end
             });
@@ -169,6 +186,16 @@ describe('Testing User REST API', function () {
                 done(); // <= Call done to signal callback end
             });
 	});
+	it('should fail deleting wrong id', function (done) { // <= Pass in done callback
+        requester
+            .delete('/users/not_an_id')
+            .end(function (err, res) {
+				if (err) throw err;
+				expect(res).to.have.status(422);
+				expect(res.text).to.equal('Wrong data received')
+                done(); // <= Call done to signal callback end
+            });
+	});
 	it('should fail adding user without name to the users table', function (done) { // <= Pass in done callback
         requester
             .post('/users')
@@ -194,7 +221,7 @@ describe('Testing User REST API', function () {
             .then(res => {
 				expect(res).to.have.status(422);
 				var result = JSON.parse(res.text);
-				expect(result.errors[0].name).to.equal('no name given');
+				expect(result.errors[0].name).to.equal('empty name');
 				done();
             }, err => {
 				console.log(err);
@@ -230,7 +257,25 @@ describe('Testing User REST API', function () {
             .then(res => {
 				expect(res).to.have.status(422);
 				var result = JSON.parse(res.text);
-				expect(result.errors[0].password).to.equal('no email given');
+				expect(result.errors[0].email).to.equal('no email given');
+				done();
+            }, err => {
+				console.log(err);
+				done();
+			})
+			.catch((err) => {
+				console.log(err);
+				done();
+			});
+	});
+	it('should fail adding user without email to the users table', function (done) { // <= Pass in done callback
+        requester
+            .post('/users')
+            .send(users.wrong_email_format_user)
+            .then(res => {
+				expect(res).to.have.status(422);
+				var result = JSON.parse(res.text);
+				expect(result.errors[0].email).to.equal('invalid email');
 				done();
             }, err => {
 				console.log(err);
