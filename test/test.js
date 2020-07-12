@@ -336,4 +336,21 @@ describe('Testing User REST API', function () {
 				done();
 			});
 	});
+	it('should fail unknown route', function (done) { // <= Pass in done callback
+        requester
+            .get('/users/unknownroute')
+            .end((err, res) => {
+				if (err) {
+					console.log(err);
+					done(err);
+				}
+				try {
+					expect(res).to.have.status(404);
+					done(); // <= Call done to signal callback end
+				}
+				catch(e) {
+					done(e);
+				}
+            });
+	});
 });
