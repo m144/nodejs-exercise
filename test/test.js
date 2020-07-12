@@ -63,7 +63,6 @@ describe('Testing User REST API', function () {
 	var user_id = null;
 	var user_id_2 = null;
     it('should add a new user to the users table successfully', function (done) { // <= Pass in done callback
-		console.log('should add a new user to the users table successfully');
 		requester
             .post('/users')
             .send(users.correct_user)
@@ -73,7 +72,7 @@ describe('Testing User REST API', function () {
 				expect(response.name).to.equal(users.correct_user.name);
 				expect(response.email).to.equal(users.correct_user.email);
 				user_id = response.id;
-                done();
+				done();
             }, err => {
 				console.log(err);
 				done();
@@ -83,14 +82,18 @@ describe('Testing User REST API', function () {
 			});
 	});
 	it('should fail adding the same user to the users table', function (done) { // <= Pass in done callback
-		console.log('should fail adding the same user to the users table');
 		requester
             .post('/users')
             .send(users.correct_user)
             .then(res => {
-				expect(res).to.have.status(422);
-				expect(res.text).to.equal('User already exists');
-                done();
+				try {
+					expect(res).to.have.status(422);
+					expect(res.text).to.equal('User already exists');
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
             }, err => {
 				console.log(err);
 				done();
@@ -100,7 +103,6 @@ describe('Testing User REST API', function () {
 			});
 	});
 	it('should add another new user to the users table successfully', function (done) { // <= Pass in done callback
-		console.log('started should add another new user to the users table successfully');
 		requester
             .post('/users')
             .send(users.correct_user_2)
@@ -123,77 +125,125 @@ describe('Testing User REST API', function () {
         requester
             .get('/users')
             .end(function (err, res) {
-				if (err) throw err;
-				expect(res).to.have.status(200);
-				var response = JSON.parse(res.text);
-				expect(response).to.include.deep.members([{
-					id:user_id,
-					name:users.correct_user.name,
-					email:users.correct_user.email
-				},{
-					id:user_id_2,
-					name:users.correct_user_2.name,
-					email:users.correct_user_2.email
-				}]);
-                done(); // <= Call done to signal callback end
+				if (err) {
+					console.log(err);
+					done(err);
+				}
+				try {
+					expect(res).to.have.status(200);
+					var response = JSON.parse(res.text);
+					expect(response).to.include.deep.members([{
+						id:user_id,
+						name:users.correct_user.name,
+						email:users.correct_user.email
+					},{
+						id:user_id_2,
+						name:users.correct_user_2.name,
+						email:users.correct_user_2.email
+					}]);
+					done(); // <= Call done to signal callback end
+				}
+				catch(e) {
+					done(e);
+				}
             });
 	});
 	it('should delete a user successfully', function (done) { // <= Pass in done callback
         requester
             .delete('/users/' + user_id)
             .end(function (err, res) {
-				if (err) throw err;
-                expect(res).to.have.status(204);
-                done(); // <= Call done to signal callback end
+				if (err) {
+					console.log(err);
+					done(err);
+				}
+				try {
+					expect(res).to.have.status(204);
+					done(); // <= Call done to signal callback end
+				}
+				catch(e) {
+					done(e);
+				}
             });
 	});
 	it('should return a list of users successfully without the new added user', function (done) { // <= Pass in done callback
         requester
             .get('/users')
             .end(function (err, res) {
-				if (err) throw err;
-				expect(res).to.have.status(200);
-				var response = JSON.parse(res.text);
-				expect(response).not.to.include.deep.members([{
-					id:user_id,
-					name:users.correct_user.name,
-					email:users.correct_user.email
-				}]);
-                done(); // <= Call done to signal callback end
+				if (err) {
+					console.log(err);
+					done(err);
+				}
+				try {
+					expect(res).to.have.status(200);
+					var response = JSON.parse(res.text);
+					expect(response).not.to.include.deep.members([{
+						id:user_id,
+						name:users.correct_user.name,
+						email:users.correct_user.email
+					}]);
+					done(); // <= Call done to signal callback end
+				}
+				catch(e) {
+					done(e);
+				}
             });
 	});
 	it('should delete the second user successfully', function (done) { // <= Pass in done callback
         requester
             .delete('/users/' + user_id_2)
             .end(function (err, res) {
-				if (err) throw err;
-                expect(res).to.have.status(204);
-                done(); // <= Call done to signal callback end
+				if (err) {
+					console.log(err);
+					done(err);
+				}
+				try {
+					expect(res).to.have.status(204);
+					done(); // <= Call done to signal callback end
+				}
+				catch(e) {
+					done(e);
+				}
             });
 	});
 	it('should return a list of users successfully without the second added user', function (done) { // <= Pass in done callback
         requester
             .get('/users')
             .end(function (err, res) {
-				if (err) throw err;
-				expect(res).to.have.status(200);
-				var response = JSON.parse(res.text);
-				expect(response).not.to.include.deep.members([{
-					id:user_id_2,
-					name:users.correct_user_2.name,
-					email:users.correct_user_2.email
-				}]);
-                done(); // <= Call done to signal callback end
+				if (err) {
+					console.log(err);
+					done(err);
+				}
+				try {
+					expect(res).to.have.status(200);
+					var response = JSON.parse(res.text);
+					expect(response).not.to.include.deep.members([{
+						id:user_id_2,
+						name:users.correct_user_2.name,
+						email:users.correct_user_2.email
+					}]);
+					done(); // <= Call done to signal callback end
+				}
+				catch(e) {
+					done(e);
+				}
             });
 	});
 	it('should fail deleting wrong id', function (done) { // <= Pass in done callback
         requester
             .delete('/users/not_an_id')
             .end(function (err, res) {
-				if (err) throw err;
-				expect(res).to.have.status(422);
-				expect(res.text).to.equal('Wrong data received')
-                done(); // <= Call done to signal callback end
+				if (err) {
+					console.log(err);
+					done(err);
+				}
+				try {
+					expect(res).to.have.status(422);
+					expect(res.text).to.equal('Wrong data received')
+					done(); // <= Call done to signal callback end
+				}
+				catch(e) {
+					done(e);
+				}
             });
 	});
 	it('should fail adding user without name to the users table', function (done) { // <= Pass in done callback
