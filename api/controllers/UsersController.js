@@ -1,24 +1,20 @@
 'use strict';
 const bcrypt = require('bcrypt');
-const { makeDB, Database } = require('../../database');
+const { Database } = require('../../database');
 const saltRounds = 10;
 
-const db = makeDB({
-	host: process.env.MYSQL_DB_HOST,
-	user: process.env.MYSQL_DB_USER,
-	password: process.env.MYSQL_DB_PASS,
-	database: process.env.MYSQL_DB_NAME
-});
+function openDBConnection() {
+	return new Database({
+		host: process.env.MYSQL_DB_HOST,
+		user: process.env.MYSQL_DB_USER,
+		password: process.env.MYSQL_DB_PASS,
+		database: process.env.MYSQL_DB_NAME
+	});
+}
 
-// new Database({
-// 	host: process.env.MYSQL_DB_HOST,
-// 	user: process.env.MYSQL_DB_USER,
-// 	password: process.env.MYSQL_DB_PASS,
-// 	database: process.env.MYSQL_DB_NAME
-// });
-
-exports.all = async function(req, res) {
+exports.all = async function(req, res) { 
 	try {
+		const db = openDBConnection();
 		const users = await db.query("SELECT id, name, email FROM users;");
 		res.json(users);
 	}
@@ -28,15 +24,18 @@ exports.all = async function(req, res) {
 }
 
 exports.create = async function(req, res) {
-	var request = Object.assign({}, req.body);
+	var request = req.body;
 	try {
+		const db = openDBConnection();
 		const users = await db.query("SELECT id FROM users WHERE email = ?",[request.email]);
 		if (users && users.length) {
+			await db.close();
 			return res.status(422).send('User already exists');
 		}
 		var hash = await bcrypt.hash(request.password, saltRounds);
 		var result = await db.query("INSERT INTO users (name, email, password) VALUES (?,?,?);", [request.name, request.email, hash]);
 		var inserted_user = await db.query("SELECT id, name, email FROM users WHERE id=?", [result.insertId]);
+		await db.close();
 		return res.status(201).json(inserted_user[0]);
 	}
 	catch(err) {
@@ -87,6 +86,7 @@ exports.create = async function(req, res) {
 exports.check = async function(req, res) {
 	const user = req.query;
 	try {
+		const db = openDBConnection();
 		var result = await db.query("SELECT password FROM users WHERE email=?",[user.email]);
 	}
 	catch(e) {
@@ -108,6 +108,7 @@ exports.check = async function(req, res) {
 
 exports.delete = function(req, res) {
 	if (req.params.userId) {
+		const db = openDBConnection();
 		if (isNaN(req.params.userId)) {
 			return res.status(422).send('Wrong data received');
 		}

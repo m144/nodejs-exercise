@@ -4,23 +4,31 @@ const app = require('../server'),
     expect = chai.expect //to solve error when using done(): “ReferenceError: expect is not defined”
 	;
 
-const { makeDB } = require('../database');
+const { Database } = require('../database');
 
-const db = makeDB({
-	host: process.env.MYSQL_DB_HOST,
-	user: process.env.MYSQL_DB_USER,
-	password: process.env.MYSQL_DB_PASS,
-	database: process.env.MYSQL_DB_NAME
-});
+function openDBConnection() {
+	return new Database({
+		host: process.env.MYSQL_DB_HOST,
+		user: process.env.MYSQL_DB_USER,
+		password: process.env.MYSQL_DB_PASS,
+		database: process.env.MYSQL_DB_NAME
+	});
+}
 
 chai.use(chaiHttp);
 //chai.use(chaiSubset);
 describe('Testing User REST API', () => {
 	before('delete test entities',() => {
 		console.log('deleting test entities before testing');
-		return db.query("DELETE FROM users WHERE name LIKE 'test_entity%';").then(() => {}, err => {throw err;});
+		try {
+			const db = openDBConnection();
+			return db.query("DELETE FROM users WHERE name LIKE 'test_entity%';").then(() => {db.close()}, err => {throw err;});
+		}
+		catch(error) {
+			console.log(error);
+			db.close();
+		}
 	});
-    after(() => {});
     var url = 'http://localhost:' + (process.env.PORT || 3000);
     var requester = chai.request.agent(url);//to keep the same session; without requester agent the get or post will act as opening a new window
     
