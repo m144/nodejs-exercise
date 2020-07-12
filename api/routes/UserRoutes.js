@@ -7,6 +7,7 @@ module.exports = app => {
 	app.get('/users', users.all);
 	app.post('/users', userValidationRules(), validate, users.create);
 	app.delete('/users/:userId', users.delete);
+	app.get('/user', users.check);
 
 	app.use((req, res) => {
 		res.status(404).send({url: req.originalUrl + ' not found'});

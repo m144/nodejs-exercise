@@ -4,9 +4,9 @@ const app = require('../server'),
     expect = chai.expect //to solve error when using done(): “ReferenceError: expect is not defined”
 	;
 
-const Database = require('../database');
+const { makeDB } = require('../database');
 
-const db = new Database({
+const db = makeDB({
 	host: process.env.MYSQL_DB_HOST,
 	user: process.env.MYSQL_DB_USER,
 	password: process.env.MYSQL_DB_PASS,
@@ -15,13 +15,13 @@ const db = new Database({
 
 chai.use(chaiHttp);
 //chai.use(chaiSubset);
-describe('Testing User REST API', function () {
-	before('starting delete test entities',() => {
-		console.log('deleting test entities');
+describe('Testing User REST API', () => {
+	before('delete test entities',() => {
+		console.log('deleting test entities before testing');
 		return db.query("DELETE FROM users WHERE name LIKE 'test_entity%';").then(() => {}, err => {throw err;});
 	});
     after(() => {});
-    var url = 'http://localhost:3000';
+    var url = 'http://localhost:' + (process.env.PORT || 3000);
     var requester = chai.request.agent(url);//to keep the same session; without requester agent the get or post will act as opening a new window
     
 	//When done is passed in, Mocha will wait until the call to done(), or until the timeout expires. 
