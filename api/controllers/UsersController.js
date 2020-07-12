@@ -64,7 +64,10 @@ exports.create = function(req, res) {
 
 exports.delete = function(req, res) {
 	if (req.params.userId) {
-		db.query("DELETE FROM users WHERE id=?",[req.params.userId])
+		if (isNaN(req.params.userId)) {
+			return res.status(422).send('Wrong data received');
+		}
+		db.query("DELETE FROM users WHERE id=?", [req.params.userId])
 		.then(
 			() => res.status(204).end(),
 			err => db.close().then( () => { res.status(500).send('Unable to delete new user: ' + err.sqlMessage); } )
