@@ -106,13 +106,13 @@ exports.check = async function(req, res) {
 
 }
 
-exports.delete = function(req, res) {
+exports.delete = async function(req, res) {
 	if (req.params.userId) {
 		const db = openDBConnection();
 		if (isNaN(req.params.userId)) {
 			return res.status(422).send('Wrong data received');
 		}
-		db.query("DELETE FROM users WHERE id=?", [req.params.userId])
+		await db.query("DELETE FROM users WHERE id=?", [req.params.userId])
 		.then(
 			() => res.status(204).end(),
 			err => db.close().then( () => { res.status(500).send('Unable to delete new user: ' + err.sqlMessage); } )

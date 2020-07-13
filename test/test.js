@@ -18,7 +18,7 @@ function openDBConnection() {
 chai.use(chaiHttp);
 //chai.use(chaiSubset);
 describe('Testing User REST API', () => {
-	before('delete test entities',() => {
+	before('delete test entities', () => {
 		console.log('deleting test entities before testing');
 		try {
 			const db = openDBConnection();
