@@ -9,6 +9,7 @@ const { Database } = require('../database');
 function openDBConnection() {
 	return new Database({
 		host: process.env.MYSQL_DB_HOST,
+		port: process.env.MYSQL_DB_PORT,
 		user: process.env.MYSQL_DB_USER,
 		password: process.env.MYSQL_DB_PASS,
 		database: process.env.MYSQL_DB_NAME
@@ -18,15 +19,16 @@ function openDBConnection() {
 chai.use(chaiHttp);
 //chai.use(chaiSubset);
 describe('Testing User REST API', () => {
-	before('delete test entities', () => {
+	before('delete test entities', async () => {
 		console.log('deleting test entities before testing');
+		var db;
 		try {
-			const db = openDBConnection();
-			return db.query("DELETE FROM users WHERE name LIKE 'test_entity%';").then(() => {db.close()}, err => {throw err;});
+			db = openDBConnection();
+			await db.query("DELETE FROM users WHERE name LIKE 'test_entity%';");
+			await db.close();
 		}
 		catch(error) {
 			console.log(error);
-			db.close();
 		}
 	});
     var url = 'http://localhost:' + (process.env.PORT || 3000);
