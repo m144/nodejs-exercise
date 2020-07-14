@@ -1,19 +1,4 @@
-const util = require('util');
 const mysql = require('mysql');
-
-function makeDB( config ) {
-	const connection = mysql.createConnection( config );
-	return {
-		query( sql, args ) {
-			return util.promisify( connection.query )
-				.call( connection, sql, args );
-		},
-		close() {
-			return util.promisify( connection.end )
-				.call( connection );
-		}
-	};
-}
 
 class Database {
 	constructor(config) {
@@ -42,6 +27,5 @@ class Database {
 }
 
 module.exports = {
-	Database,
-	makeDB
+	Database
 }
