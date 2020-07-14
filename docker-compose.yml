@@ -5,7 +5,7 @@ services:
         build: ./app
         container_name: lytx-rest-api
         ports:
-            - "3000:3000"
+            - 3000:3000
         networks:
             lytx_net:
                 ipv4_address: 172.28.1.1
@@ -14,12 +14,12 @@ services:
             - MYSQL_DB_PASS=12345678
             - MYSQL_DB_NAME=lytx
             - MYSQL_DB_HOST=172.28.1.2
-            - MYSQL_DB_PORT=6603
+            - MYSQL_DB_PORT=3306
     db:
         build: ./mysql
         container_name: lytx-mysql
         ports:
-            - "6603:3306"
+            - 6603:3306
         networks:
             lytx_net:
                 ipv4_address: 172.28.1.2
