@@ -1,7 +1,7 @@
 'use strict';
-const app = require('../server'),
-    chai = require('chai'), chaiHttp = require('chai-http'),
-    expect = chai.expect //to solve error when using done(): “ReferenceError: expect is not defined”
+require('dotenv').config({path: __dirname + '/.env'});
+const chai = require('chai'), chaiHttp = require('chai-http'),
+	expect = chai.expect //to solve error when using done(): “ReferenceError: expect is not defined”
 	;
 
 const { Database } = require('../database');
