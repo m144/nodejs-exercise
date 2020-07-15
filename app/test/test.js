@@ -31,7 +31,7 @@ describe('Testing User REST API', () => {
 			console.log(error);
 		}
 	});
-    var url = 'http://localhost:' + (process.env.PORT || 3000);
+	var url = 'http://' + (process.env.APP_URL || 'localhost') + ':' + (process.env.PORT || 3000);
     var requester = chai.request.agent(url);//to keep the same session; without requester agent the get or post will act as opening a new window
     
 	//When done is passed in, Mocha will wait until the call to done(), or until the timeout expires. 
@@ -134,6 +134,34 @@ describe('Testing User REST API', () => {
 	it('should return a list of users successfully', function (done) { // <= Pass in done callback
         requester
             .get('/users')
+            .end(function (err, res) {
+				if (err) {
+					console.log(err);
+					done(err);
+				}
+				try {
+					expect(res).to.have.status(200);
+					var response = JSON.parse(res.text);
+					expect(response).to.include.deep.members([{
+						id:user_id,
+						name:users.correct_user.name,
+						email:users.correct_user.email
+					},{
+						id:user_id_2,
+						name:users.correct_user_2.name,
+						email:users.correct_user_2.email
+					}]);
+					done(); // <= Call done to signal callback end
+				}
+				catch(e) {
+					done(e);
+				}
+            });
+	});
+	it('should return a list of the first user successfully', function (done) { // <= Pass in done callback
+        requester
+			.get('/users')
+			.query({from: 0, limit: 1})
             .end(function (err, res) {
 				if (err) {
 					console.log(err);

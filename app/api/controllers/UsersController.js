@@ -15,17 +15,35 @@ function openDBConnection() {
 
 exports.all = async function(req, res) { 
 	try {
+		var request = req.query;
+		console.log(request);
+		var users;
 		const db = openDBConnection();
-		const users = await db.query("SELECT id, name, email FROM users;");
+		if (request && request.length) {
+			var query = "SELECT id, name, email FROM users";
+			if (request.limit) {
+				query += " LIMIT " + request.limit;
+			}
+			if (request.from) {
+				query += " OFFSET " + request.from;
+			}
+			users = await db.query(query);
+		} else {
+			users = await db.query("SELECT id, name, email FROM users;");
+		}
 		res.json(users);
 	}
 	catch(err) {
-		res.status(500).send(err);
+		console.log(err);
+		res.status(500).end();
 	}
 }
 
 exports.create = async function(req, res) {
 	var request = req.body;
+	if (request.user) {
+		request = request.user;
+	}
 	try {
 		const db = openDBConnection();
 		const users = await db.query("SELECT id FROM users WHERE email = ?",[request.email]);
@@ -42,29 +60,6 @@ exports.create = async function(req, res) {
 	catch(err) {
 		res.status(500).send(err);
 	}
-}
-
-exports.check = async function(req, res) {
-	const user = req.query;
-	try {
-		const db = openDBConnection();
-		var result = await db.query("SELECT password FROM users WHERE email=?",[user.email]);
-	}
-	catch(err) {
-		res.status(500).send(err);
-	}
-	if (result && result.length) {
-		bcrypt.compare(user.password, result[0].password, (err, matches) => {
-			if (matches) {
-				return res.status(200).send('user ok');
-			} else {
-				return res.status(422).send('incorrect password');
-			}
-		});
-	} else {
-		return res.status(422).send('unknown user');
-	}
-
 }
 
 exports.delete = async function(req, res) {

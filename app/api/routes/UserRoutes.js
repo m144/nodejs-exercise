@@ -1,15 +1,14 @@
 'use strict';
 module.exports = app => {
 	const users = require('../controllers/UsersController');
-	const { userValidationRules, validate } = require('../../validator.js');
+	const { getUsersValidationRules, userValidationRules, validate } = require('../../validator.js');
 
 	// user Routes
-	app.get('/users', users.all);
+	app.get('/users', getUsersValidationRules(), validate, users.all);
 	app.post('/users', userValidationRules(), validate, users.create);
 	app.delete('/users/:userId', users.delete);
-	app.get('/user', users.check);
 
 	app.use((req, res) => {
-		res.status(404).send({url: req.originalUrl + ' not found'});
+		res.status(404).end();
 	});
 };

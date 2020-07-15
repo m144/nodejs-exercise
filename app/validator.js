@@ -15,6 +15,15 @@ const userValidationRules = () => {
 	];
 };
 
+const getUsersValidationRules = () => {
+	return [
+		query('from')
+			.isInt().withMessage('From is not an integer'),
+		query('limit')
+			.isInt().withMessage('Limit is not an integer')
+	];
+};
+
 const validate = (req, res, next) => {
 	const errors = validationResult(req);
 	if (errors.isEmpty()) {
@@ -29,6 +38,7 @@ const validate = (req, res, next) => {
 }
 
 module.exports = {
+	getUsersValidationRules,
 	userValidationRules,
 	validate,
 }
