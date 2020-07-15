@@ -10,6 +10,7 @@ A user has the following fields:
 2.	Name
 3.	Email
 4.	password
+
 The service facilitates the following operations:
 1.	Create a user
 2.	Delete a user
