@@ -14,6 +14,6 @@ The service facilitates the following operations:
 2.	Delete a user
 3.	Get all users
 
-The api can be run on docker by calling docker-compose command in the main folder (where docker-compose.yml file sits)
+The api can be run on docker by calling `docker-compose` command in the main folder (where docker-compose.yml file sits)
 
 Once the dockers are up, you can run `npm test` to run basic tests on the api.
