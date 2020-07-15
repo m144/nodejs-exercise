@@ -1,5 +1,5 @@
 'use strict';
-require('dotenv').config({path: __dirname + '/.env'});
+require('dotenv').config({path: __dirname + '/.env.test'});
 const chai = require('chai'), chaiHttp = require('chai-http'),
 	expect = chai.expect //to solve error when using done(): “ReferenceError: expect is not defined”
 	;
