@@ -1,6 +1,6 @@
 # nodejs-exercise
 
-This is an excersie in building a nodejs RESTful API.
+This is an exercise in building a nodejs RESTful API.
 All specifications can be found in the api_specifications_oas.yml OpenAPI file.
 
 In short, it accesses the users table in a mysql database.
