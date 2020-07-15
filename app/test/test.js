@@ -29,7 +29,6 @@ describe('Testing User REST API', () => {
 			await db.close();
 		}
 		catch(error) {
-			console.log('error here');
 			console.log(error);
 		}
 	});
@@ -79,7 +78,6 @@ describe('Testing User REST API', () => {
             .post('/users')
             .send(users.correct_user)
             .then(res => {
-				console.log('here');
 				expect(res).to.have.status(201);
 				var response = JSON.parse(res.text);
 				expect(response.name).to.equal(users.correct_user.name);
