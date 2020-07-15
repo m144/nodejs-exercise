@@ -5,6 +5,7 @@ const chai = require('chai'), chaiHttp = require('chai-http'),
 	;
 
 const { Database } = require('../database');
+const { response } = require('express');
 
 function openDBConnection() {
 	return new Database({
@@ -28,6 +29,7 @@ describe('Testing User REST API', () => {
 			await db.close();
 		}
 		catch(error) {
+			console.log('error here');
 			console.log(error);
 		}
 	});
@@ -72,11 +74,12 @@ describe('Testing User REST API', () => {
 	};
 	var user_id = null;
 	var user_id_2 = null;
-    it('should add a new user to the users table successfully', function (done) { // <= Pass in done callback
+	it('should add a new user to the users table successfully', function (done) { // <= Pass in done callback
 		requester
             .post('/users')
             .send(users.correct_user)
             .then(res => {
+				console.log('here');
 				expect(res).to.have.status(201);
 				var response = JSON.parse(res.text);
 				expect(response.name).to.equal(users.correct_user.name);
@@ -215,6 +218,23 @@ describe('Testing User REST API', () => {
 				}
             });
 	});
+	it('should fail deleting the second user again', function (done) { // <= Pass in done callback
+        requester
+            .delete('/users/' + user_id_2)
+            .end(function (err, res) {
+				if (err) {
+					console.log(err);
+					done(err);
+				}
+				try {
+					expect(res).to.have.status(404);
+					done(); // <= Call done to signal callback end
+				}
+				catch(e) {
+					done(e);
+				}
+            });
+	});
 	it('should return a list of users successfully without the second added user', function (done) { // <= Pass in done callback
         requester
             .get('/users')
@@ -248,7 +268,8 @@ describe('Testing User REST API', () => {
 				}
 				try {
 					expect(res).to.have.status(422);
-					expect(res.text).to.equal('Wrong data received')
+					var response = JSON.parse(res.text);
+					expect(response.errors[0].userId).to.equal('Not a user id')
 					done(); // <= Call done to signal callback end
 				}
 				catch(e) {

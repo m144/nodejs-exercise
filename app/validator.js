@@ -1,4 +1,4 @@
-const { body, validationResult } = require('express-validator')
+const { body, param, validationResult } = require('express-validator')
 const userValidationRules = () => {
 	return [
 		body('name')
@@ -12,6 +12,15 @@ const userValidationRules = () => {
 		body('password')
 			.exists().withMessage('no password given')
 			.not().isEmpty().withMessage('empty password')
+	];
+};
+
+const deletionValidationRules = () => {
+	return [
+		param('userId')
+			.exists().withMessage('No user id specified')
+			.not().isEmpty().withMessage('User id empty')
+			.isInt().withMessage('Not a user id')
 	];
 };
 
@@ -30,5 +39,6 @@ const validate = (req, res, next) => {
 
 module.exports = {
 	userValidationRules,
+	deletionValidationRules,
 	validate,
 }

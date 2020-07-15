@@ -17,10 +17,12 @@ exports.all = async function(req, res) {
 	try {
 		const db = openDBConnection();
 		const users = await db.query("SELECT id, name, email FROM users;");
-		res.json(users);
+		await db.close();
+		return res.json(users);
 	}
 	catch(err) {
-		res.status(500).send(err);
+		console.log(err);
+		return res.status(500).end();
 	}
 }
 
@@ -40,45 +42,25 @@ exports.create = async function(req, res) {
 		return res.status(201).json(inserted_user[0]);
 	}
 	catch(err) {
-		res.status(500).send(err);
+		console.log(err);
+		return res.status(500).end();
 	}
-}
-
-exports.check = async function(req, res) {
-	const user = req.query;
-	try {
-		const db = openDBConnection();
-		var result = await db.query("SELECT password FROM users WHERE email=?",[user.email]);
-	}
-	catch(err) {
-		res.status(500).send(err);
-	}
-	if (result && result.length) {
-		bcrypt.compare(user.password, result[0].password, (err, matches) => {
-			if (matches) {
-				return res.status(200).send('user ok');
-			} else {
-				return res.status(422).send('incorrect password');
-			}
-		});
-	} else {
-		return res.status(422).send('unknown user');
-	}
-
 }
 
 exports.delete = async function(req, res) {
-	if (req.params.userId) {
+	try {
 		const db = openDBConnection();
-		if (isNaN(req.params.userId)) {
-			return res.status(422).send('Wrong data received');
+		var user = await db.query("SELECT id FROM users WHERE id=?", [req.params.userId]);
+		if (!user || !user.length) {
+			await db.close();
+			return res.status(404).send('User not found');
 		}
-		await db.query("DELETE FROM users WHERE id=?", [req.params.userId])
-		.then(
-			() => res.status(204).end(),
-			err => db.close().then( () => { res.status(500).send('Unable to delete new user: ' + err.sqlMessage); } )
-		)
-	} else {
-		return res.status(422).send('Wrong data received');
+		await db.query("DELETE FROM users WHERE id=?", [req.params.userId]);
+		await db.close();
+		return res.status(204).end();
+	}
+	catch(err) {
+		console.log(err);
+		return res.status(500).end();
 	}
 }
