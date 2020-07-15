@@ -18,4 +18,4 @@ The service facilitates the following operations:
 
 The api can be run on docker by calling `docker-compose` command in the main folder (where docker-compose.yml file sits)
 
-Once the dockers are up, you can run `npm test` to run basic tests on the api.
+Once the dockers are up, you can run `npm test` from within the app folder to run basic tests on the api.
