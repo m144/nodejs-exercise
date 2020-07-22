@@ -1,50 +1,29 @@
 'use strict';
 const bcrypt = require('bcrypt');
-const { Database } = require('../../database');
 const saltRounds = 10;
 
-function openDBConnection() {
-	return new Database({
-		host: process.env.MYSQL_DB_HOST,
-		port: process.env.MYSQL_DB_PORT,
-		user: process.env.MYSQL_DB_USER,
-		password: process.env.MYSQL_DB_PASS,
-		database: process.env.MYSQL_DB_NAME
+var mongoose = require('mongoose'),
+	User = mongoose.model('User');
+
+exports.all = function(req, res) {
+	User.find({}, (err, users) => {
+		if (err) {
+			res.send(err);
+		}
+		res.json(users);
 	});
 }
 
-exports.all = async function(req, res) { 
-	try {
-		const db = openDBConnection();
-		const users = await db.query("SELECT id, name, email FROM users;");
-		await db.close();
-		return res.json(users);
-	}
-	catch(err) {
-		console.log(err);
-		return res.status(500).end();
-	}
-}
-
 exports.create = async function(req, res) {
-	var request = req.body;
-	try {
-		const db = openDBConnection();
-		const users = await db.query("SELECT id FROM users WHERE email = ?",[request.email]);
-		if (users && users.length) {
-			await db.close();
-			return res.status(422).send('User already exists');
+	var new_user = new User(req.body);
+	var hash = await bcrypt.hash(new_user.get('password'), saltRounds);
+	new_user.set('password', hash);
+	new_user.save((err, user) => {
+		if (err) {
+			res.send(err);
 		}
-		var hash = await bcrypt.hash(request.password, saltRounds);
-		var result = await db.query("INSERT INTO users (name, email, password) VALUES (?,?,?);", [request.name, request.email, hash]);
-		var inserted_user = await db.query("SELECT id, name, email FROM users WHERE id=?", [result.insertId]);
-		await db.close();
-		return res.status(201).json(inserted_user[0]);
-	}
-	catch(err) {
-		console.log(err);
-		return res.status(500).end();
-	}
+		res.json(user);
+	});
 }
 
 exports.delete = async function(req, res) {

@@ -27,8 +27,10 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express-validator": "^6.6.0",
+    "mongoose": "^5.9.25",
     "mysql": "^2.18.1"
   },
   "devDependencies": {
